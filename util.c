@@ -2458,7 +2458,13 @@ static bool parse_diff(struct pool *pool, json_t *val)
 	if (diff == 0)
 		return false;
 
-	diff = bdiff_to_pdiff(diff);
+	if ((int64_t)diff != diff)
+	{
+		// Assume fractional values are proper bdiff per specification
+		// Allow integers to be interpreted as pdiff, since some the difference is trivial and some pools see it this way
+		diff = bdiff_to_pdiff(diff);
+	}
+	
 	if ((!opt_scrypt) && diff < 1 && diff > 0.999)
 		diff = 1;
 	
@@ -2473,7 +2479,8 @@ static bool parse_diff(struct pool *pool, json_t *val)
 
 	// Ideally pools will fix their implementation and we can remove this
 	// This should carry us until folks are hashing Scrypt with > ~256 Gh/s (diff 1 = 4 Gh/s)
-	if (opt_scrypt && (diff > minimum_broken_scrypt_diff)) diff /= broken_scrypt_diff_multiplier;
+	if (opt_scrypt && (diff > minimum_broken_scrypt_diff))
+		diff /= broken_scrypt_diff_multiplier;
 #endif
 
 	cg_wlock(&pool->data_lock);
