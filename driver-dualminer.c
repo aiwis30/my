@@ -304,7 +304,12 @@ bool dualminer_job_prepare(struct thr_info *thr, struct work *work, __maybe_unus
 static
 void dualminer_reinit_device(struct cgpu_info * const cgpu)
 {
-	gc3355_init_dualminer(cgpu->device_fd, opt_pll_freq, !opt_dual_mode, true);
+	struct thr_info * const thr = cgpu->thr[0];
+
+	do_icarus_close(thr);
+	icarus_init(thr);
+	if (cgpu->device_fd != -1)
+		gc3355_init_dualminer(cgpu->device_fd, opt_pll_freq, !opt_dual_mode, true);
 }
 
 // support for --set-device dualminer:clock=freq
